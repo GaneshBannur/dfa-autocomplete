@@ -10,9 +10,9 @@ final_dfa[root] = {"accepting":0, "transitions":minimized_dfa[root]}
 
 def traverse(prefix):
   current = root
-  for idx, letter in enumerate(prefix, start=1) :
-    for transition in minimized_dfa[current] :
-      if letter==transition :
+  for idx, letter in enumerate(prefix, start=1):
+    for transition in minimized_dfa[current]:
+      if letter==transition:
         current=minimized_dfa[current][transition]
         if current not in final_dfa:
           if idx==len(prefix):
@@ -23,7 +23,8 @@ def traverse(prefix):
 
 fhand=open('./words.txt')
 for word in fhand:
-  word = word[:-1]
+  if word[-1]=="\n":
+    word = word[:-1]
   traverse(word)
 
 with open('minimized_dfa_with_accepting.json', 'w') as fp:

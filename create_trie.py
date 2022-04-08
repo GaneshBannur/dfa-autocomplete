@@ -1,24 +1,27 @@
 #building a trie from the word corpus in words.txt
-from anytree import Node, RenderTree
+from anytree import Node
 
 def traverse_and_add(prefix, root):
   current=root
-  for letter in prefix :
-    flag=0;
-    for child in current.children :
-      if letter==child.name :
+  for letter in prefix:
+    flag=0
+    for child in current.children:
+      if letter==child.name:
         current=child
         flag=1
         break
-    if flag!=1 :
-      temp = Node(letter, parent=current)
+    if flag!=1:
+      temp = Node(letter, parent=current, accepting=0)
       current = temp
+  current.accepting = 1
 
-root = Node ('0')
+root = Node ('0', accepting=0)
 fhand=open('./words.txt')
 for word in fhand:
-  word = word[:-1]
-  traverse_and_add(word,root)
+  if word[-1]=="\n":
+    word = word[:-1]
+  if len(word)>1:
+    traverse_and_add(word,root)
 
 #conversion of the trie to a dfa and storing it in a txt file for minimization
 
@@ -30,9 +33,9 @@ transition_function = {}
 def traverse(root, node_num):
   current = root
   transition_function[states[current]] = {}
-  if not current.children :
+  if current.accepting==1:
     accepting_states.add(states[root])
-  for child in current.children :
+  for child in current.children:
     node_num += 1
     states[child] = "q"+str(node_num)
     alphabet.add(child.name)
@@ -42,7 +45,7 @@ def traverse(root, node_num):
 
 traverse(root, 0)
 
-dfa_file = open(file = r"test4.txt", mode = 'w')
+dfa_file = open(file = r"initial_dfa.txt", mode = 'w')
 for key in list(states)[:-1]:
   dfa_file.writelines(states[key]+",")
 dfa_file.writelines(states[list(states)[-1]]+"\n")

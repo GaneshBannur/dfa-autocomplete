@@ -1,7 +1,7 @@
 """creates a flask server which runs the method to autocomplete a word on the request of the
 script running on the text editor"""
 
-from flask import Flask, request, render_template
+from flask import Flask, request
 from flask_cors import CORS
 import json
 
@@ -15,7 +15,7 @@ CORS(app)
 def traverse_and_find(root, prefix):
   current = root
   for letter in prefix :
-    flag=0;
+    flag=0
     for transition in final_dfa[current]["transitions"] :
       if letter==transition :
         current=final_dfa[current]["transitions"][transition]

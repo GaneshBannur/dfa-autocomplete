@@ -1,6 +1,6 @@
-# Authors:
-# RichieSjt https://github.com/RichieSjt
-# EduardoHerreraJ https://github.com/EduardoHerreraJ
+#Original code from https://github.com/RichieSjt
+#Significant updates to improve performance, add features and fix bugs
+#Runtime on given automata reduced from approximately 1.6 hours to 10 minutes
 
 import re
 import collections.abc
@@ -38,16 +38,31 @@ def generate_dfa(states, transitions):
     return dfa
 
 
-def search_repeated_transitions(dfa, initial_states, final_states):
-    repeated = list()
+def search_repeated_transitions(dfa, final_states):
+    repeated = set()
+    flag=0
 
     # Comparing every state with each other only once
     for i, j in itertools.combinations(dfa, 2):
         if dfa[i] == dfa[j]:
             if (i not in final_states and j not in final_states) or (i in final_states and j in final_states):
-                # Making sure to not add duplicate states
-                if i not in repeated: repeated.append(i)
-                if j not in repeated: repeated.append(j)
+                repeated.add(i)
+                repeated.add(j)
+                if i in final_states:
+                    flag = 1
+                break
+    
+    if len(repeated)==0:
+        repeated = list(repeated)
+        return repeated
+
+    # Getting any element in repeated to compare its transitions with all states (here we get the first)
+    for first_in_repeated in repeated:
+            break
+    for state in dfa:
+        if dfa[state] == dfa[first_in_repeated] and ((state not in final_states and flag==0) or (state in final_states and flag==1)):
+            repeated.add(state)
+    repeated = list(repeated)
     return repeated
 
 
@@ -59,14 +74,18 @@ def update_states(dfa, states):
     return
 
 
-def replace_keys(repeated_equal):
+def replace_keys(repeated_equal, final_states):
     letter = letters.pop(0)
+
+    #If accepting states were combined then the new state must also be an accepting state
+    if(repeated_equal[0] in final_states):
+        final_states.append("q%d" % letter)
 
     # Deleting the repeated state keys from the dfa and adding the new ones
     for r in repeated_equal:
         contents_temp = dfa[r]
         del dfa[r]
-        row = {"q" + letter: contents_temp}
+        row = {"q%d" % letter: contents_temp}
         update(dfa, row)
 
     # Updating the states list now that the repeated states have been substituted
@@ -78,7 +97,7 @@ def replace_keys(repeated_equal):
             # Catching a KeyError in case a transition was not specified by the user
             try:
                 if dfa[s][l] in repeated_equal:
-                    dfa[s][l] = 'q' + letter
+                    dfa[s][l] = 'q%d' % letter
             except KeyError:
                 pass
     return
@@ -86,7 +105,7 @@ def replace_keys(repeated_equal):
 
 def minimize_dfa(dfa, alphabet, states, initial_states, final_states):
     # Obtaining the states that have the same transitions
-    repeated = search_repeated_transitions(dfa, initial_states, final_states)
+    repeated = search_repeated_transitions(dfa, final_states)
 
     # Repeating the process of minimization until there are no states with the same transitions
     while repeated:
@@ -98,15 +117,15 @@ def minimize_dfa(dfa, alphabet, states, initial_states, final_states):
             repeated_equal = [k for k, v in dfa.items() if v == contents and k in repeated]
             repeated = [e for e in repeated if e not in repeated_equal]
             # Replacing those states with the minimized states
-            replace_keys(repeated_equal)
+            replace_keys(repeated_equal, final_states)
             repeated_equal.clear()
 
-        repeated = search_repeated_transitions(dfa, initial_states, final_states)
+        repeated = search_repeated_transitions(dfa, final_states)
 
     return dfa
 
 # Select the text file we want to read
-file = open("test4.txt", "r")
+file = open("initial_dfa.txt", "r")
 
 transitions = list()
 
